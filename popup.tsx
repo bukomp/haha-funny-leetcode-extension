@@ -24,11 +24,21 @@ const IndexPopup = () => {
     "The LeetCode Torture gods are pleased. Rest, for tomorrow brings a new challenge",
     "Solved your problem for the day, nice, go treat yourself"
   ]
+  const possibleHyperTortureMessages = [
+    "Your code is compiling... just kidding, prepare for eternal agony.",
+    "Infinite loop of despair activated.",
+    "Feel the burn(out), keep those functions running.",
+    "Error 404: Social life not found. Keep coding.",
+    "Another day, another dollar... subtracted from your sanity budget.",
+    "Commit to the code grind, the keyboard is your only friend."
+  ]
   const [randomUnsolvedMessage, setRandomUnsolvedMessage] = useState("")
   const [randomSolvedMessage, setRandomSolvedMessage] = useState("")
+  const [randomHyperTortureMessage, setRandomHyperTortureMessage] = useState("")
   const [problemName] = useStorage<string>("problemName")
   const [problemURL] = useStorage<string>("problemURL")
   const [leetcodeProblemSolved] = useStorage<boolean>("leetCodeProblemSolved")
+  const [hyperTortureMode] = useStorage<boolean>("hyperTortureMode")
   const [currentStreak] = useStorage<number>("currentStreak")
   const [bestStreak] = useStorage<number>("bestStreak")
   const [drawerClosed, setDrawerClosed] = useState(true)
@@ -39,10 +49,17 @@ const IndexPopup = () => {
     const randomUnsolvedIndex = Math.floor(
       Math.random() * possibleUnSolvedMessages.length
     )
+    const randomPossibleHyperTortureMessagesIndex = Math.floor(
+      Math.random() * possibleHyperTortureMessages.length
+    )
     const randomSolvedIndex = Math.floor(
       Math.random() * possibleSolvedMessages.length
     )
+    console.log(hyperTortureMode)
     setRandomSolvedMessage(possibleSolvedMessages[randomSolvedIndex])
+    setRandomHyperTortureMessage(
+      possibleHyperTortureMessages[randomPossibleHyperTortureMessagesIndex]
+    )
     setRandomUnsolvedMessage(possibleUnSolvedMessages[randomUnsolvedIndex])
     // Makes sure the loading screen isn't stuck on for initial render
     let timer
@@ -90,9 +107,19 @@ const IndexPopup = () => {
           </div>
         ) : (
           <>
-            {!leetcodeProblemSolved ? (
+            {hyperTortureMode || !leetcodeProblemSolved ? (
               <>
-                <h2 id="unsolved-message">{randomUnsolvedMessage}</h2>
+                {hyperTortureMode && (
+                  <h1 id="hyperTorture-message">
+                    ❗Hyper 🤓 Torture mode active❗
+                  </h1>
+                )}
+                <h2 id="unsolved-message">
+                  {hyperTortureMode
+                    ? randomHyperTortureMessage
+                    : randomUnsolvedMessage}
+                </h2>
+
                 <div className="leetcode-info">
                   <p className="question-of-day-msg">Today's Question</p>
                   <p id="leetcode-problem-name">{problemName}</p>
