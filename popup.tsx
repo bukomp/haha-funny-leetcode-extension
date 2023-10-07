@@ -9,6 +9,26 @@ import SettingsIcon from "~components/SettingsIcon"
 
 import { updateStorage } from "./background"
 
+const HyperTortureModeIndex = ({ message, problemName }): React.JSX.Element => {
+  const [noEscapeMessage, setNoEscapeMessage] = useState("")
+  return (
+    <>
+      <h1 id="hyperTorture-message">❗Hyper 🤓 Torture mode active❗</h1>
+
+      <h2 id="unsolved-message">{message}</h2>
+
+      <div className="leetcode-info">
+        <p id="leetcode-problem-name">{problemName}</p>
+        <button
+          id="leetcode-problem-button"
+          onClick={() => setNoEscapeMessage("There Is No Escape")}>
+          {noEscapeMessage || "Solve it"}
+        </button>
+      </div>
+    </>
+  )
+}
+
 const IndexPopup = () => {
   // Gets information from background.js and displays it on popup.html
   const possibleUnSolvedMessages = [
@@ -107,18 +127,14 @@ const IndexPopup = () => {
           </div>
         ) : (
           <>
-            {hyperTortureMode || !leetcodeProblemSolved ? (
+            {hyperTortureMode ? (
+              <HyperTortureModeIndex
+                message={randomHyperTortureMessage}
+                problemName={problemName}
+              />
+            ) : !leetcodeProblemSolved ? (
               <>
-                {hyperTortureMode && (
-                  <h1 id="hyperTorture-message">
-                    ❗Hyper 🤓 Torture mode active❗
-                  </h1>
-                )}
-                <h2 id="unsolved-message">
-                  {hyperTortureMode
-                    ? randomHyperTortureMessage
-                    : randomUnsolvedMessage}
-                </h2>
+                <h2 id="unsolved-message">{randomUnsolvedMessage}</h2>
 
                 <div className="leetcode-info">
                   <p className="question-of-day-msg">Today's Question</p>
