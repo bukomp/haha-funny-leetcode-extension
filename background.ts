@@ -342,6 +342,19 @@ const checkIfUserSolvedProblem = async (details) => {
 }
 // Check if a streak should be updated. Should only be called when a problem has been completed.
 async function updateStreak() {
+  if (await storage.get("hyperTortureMode")) {
+    // Update streak
+    const currentStreak: number = (await storage.get("HT_currentStreak")) ?? 0
+    const newStreak = currentStreak + 1
+    await storage.set("HT_currentStreak", newStreak)
+
+    // If new streak higher than best streak, update best streak
+    const bestStreak: number = (await storage.get("HT_bestStreak")) ?? 0
+    if (newStreak > bestStreak) await storage.set("HT_bestStreak", newStreak)
+
+    return
+  }
+
   const lastCompletedString = await storage.get("lastCompleted")
   const lastCompleted = lastCompletedString
     ? new Date(lastCompletedString)
