@@ -28,6 +28,8 @@ let leetCodeProblem = {
 }
 let lastSubmissionDate = new Date(0)
 let solvedListenerActive = false
+let lastAttemptedUrl = null
+let urlListener = null
 
 // Get Problem List from leetcode graphql API
 const getProblemListFromLeetCodeAPI = async (difficulty, problemSet) => {
@@ -135,10 +137,12 @@ const generateRandomLeetCodeProblem = async () => {
       }
       const res = await fetch(chrome.runtime.getURL(problemSetURLs[problemSet]))
       leetCodeProblems = await res.json()
-      leetCodeProblems = leetCodeProblems
-        .filter((problem) => {
-          return (includePremium || !problem.isPremium) &&
-          (difficulty == "all" || problem.difficulty.toLowerCase() === difficulty.toLowerCase())
+      leetCodeProblems = leetCodeProblems.filter((problem) => {
+        return (
+          (includePremium || !problem.isPremium) &&
+          (difficulty == "all" ||
+            problem.difficulty.toLowerCase() === difficulty.toLowerCase())
+        )
       })
 
       let randomIndex = Math.floor(Math.random() * leetCodeProblems.length)
@@ -220,6 +224,7 @@ async function setRedirectRule(newRedirectUrl: string) {
     console.error("Error updating redirect rule:", error)
   }
 }
+
 export const updateStorage = async () => {
   const result = await generateRandomLeetCodeProblem()
 
@@ -242,6 +247,7 @@ export const updateStorage = async () => {
     await setRedirectRule(randomProblemURL)
   }
 }
+
 //let lastCheckedUrl = ""
 //let lastCheckedTimestamp = 0
 const checkIfUserSolvedProblem = async (details) => {
@@ -283,6 +289,7 @@ const checkIfUserSolvedProblem = async (details) => {
 
   if (isSubmissionSuccessURL(details.url)) {
     try {
+      const hyperTortureMode = await storage.get("hyperTortureMode")
       const response = await fetch(details.url)
       const data = await response.json()
       if (data.state === "STARTED" || data.state === "PENDING") {
@@ -318,8 +325,15 @@ const checkIfUserSolvedProblem = async (details) => {
         })
         await storage.set("leetCodeProblemSolved", true)
         chrome.webRequest.onCompleted.removeListener(checkIfUserSolvedProblem)
-        sendUserSolvedMessage(data?.lang)
         console.log("User solved problem, should've gotten the success message")
+        if (hyperTortureMode) {
+          if (lastAttemptedUrl) {
+            chrome.tabs.update({ url: lastAttemptedUrl })
+          }
+          await updateStorage()
+        } else {
+          sendUserSolvedMessage(data?.lang)
+        }
       }
     } catch (error) {
       console.error("Error:", error)
@@ -361,10 +375,36 @@ async function checkResetStreak() {
   }
 }
 
+export async function toggleUrlListener(toggle: boolean): Promise<void> {
+  if (toggle) {
+    // Save users request url for further redirect
+    urlListener = chrome.webRequest.onBeforeRequest.addListener(
+      (details) => {
+        if (
+          !isLeetCodeUrl(details.url) &&
+          details.type === "main_frame" &&
+          details.url.includes("chrome-extension:")
+        ) {
+          // Save the URL the user tried to open
+          lastAttemptedUrl = details.url
+        }
+      },
+      { urls: ["<all_urls>"] }
+    )
+  } else {
+    chrome.webRequest.onBeforeRequest.removeListener(urlListener)
+  }
+}
+
 // Initialize
 chrome.runtime.onInstalled.addListener(async () => {
   await updateStorage()
   await checkResetStreak()
+})
+
+// Initialize on browser startup
+chrome.runtime.onStartup.addListener(async () => {
+  toggleUrlListener(await storage.get("hyperTortureMode"))
 })
 
 // Ensure the alarm is set when the extension starts
