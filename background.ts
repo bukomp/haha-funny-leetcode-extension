@@ -310,8 +310,10 @@ const checkIfUserSolvedProblem = async (details) => {
       }
       console.log("Checking if state is success")
       if (data.status_msg !== "Accepted") {
-        await resetHyperTortureStreak()
-        sendUserFailedMessage()
+        if (hyperTortureMode) {
+          await resetHyperTortureStreak()
+          sendUserFailedMessage()
+        }
         console.log(
           "It is not a success submission, user did not solve problem"
         )
