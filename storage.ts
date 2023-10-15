@@ -45,16 +45,18 @@ export async function getLastCompletion() {
 
 export async function updateStreak() {
   if (await getHyperTortureMode()) {
-    // Update HT streak
-    const [HT_bestStreak, HT_newStreak] = await Promise.all([
-      Number(await storage.get("HT_bestStreak")) || 0,
-      (Number(await storage.get("HT_currentStreak")) || 0) + 1
+    // Update hyper torture streak
+    const [HT_bestStreak, HT_currentStreak] = await Promise.all([
+      storage.get("HT_bestStreak"),
+      storage.get("HT_currentStreak")
     ])
 
+    const HT_newStreak = (Number(HT_currentStreak) || 0) + 1
+    const HT_best = Number(HT_bestStreak) || 0
+
     await storage.set("HT_currentStreak", HT_newStreak)
-    // If new HT streak higher than best HT streak, update it
-    if (HT_newStreak > HT_bestStreak)
-      await storage.set("HT_bestStreak", HT_newStreak)
+    // If new hyper torture streak higher than best hyper torture streak, update it
+    if (HT_newStreak > HT_best) await storage.set("HT_bestStreak", HT_newStreak)
   } else {
     const [_, lastCompletion] = await Promise.all([
       updateProblemSolvedState(true),
@@ -64,14 +66,17 @@ export async function updateStreak() {
     const now = new Date()
     if (lastCompletion.toDateString() === new Date().toDateString()) return
 
-    const [bestStreak, newStreak] = await Promise.all([
-      Number(storage.get("bestStreak")) ?? 0,
-      (Number(storage.get("currentStreak")) ?? 0) + 1
+    const [bestStreak, currentStreak] = await Promise.all([
+      storage.get("bestStreak"),
+      storage.get("currentStreak")
     ])
+
+    const newStreak = (Number(currentStreak) || 0) + 1
+    const best = Number(bestStreak) || 0
 
     await storage.set("currentStreak", newStreak)
     await storage.set("lastCompleted", now.toDateString())
-    if (newStreak > bestStreak) await storage.set("bestStreak", newStreak)
+    if (newStreak > best) await storage.set("bestStreak", newStreak)
   }
 }
 
