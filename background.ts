@@ -1,4 +1,4 @@
-import { getHyperTortureMode, storage } from "storage"
+import { getHyperTortureMode, resetHyperTortureStreak, storage } from "storage"
 
 //Constants
 const LEETCODE_URL = "https://leetcode.com"
@@ -15,6 +15,14 @@ const sendUserSolvedMessage = (languageUsed: string) => {
     chrome.tabs.sendMessage(tabs[0].id, {
       action: "userSolvedProblem",
       language: languageUsed
+    })
+  })
+}
+
+const sendUserFailedMessage = () => {
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    chrome.tabs.sendMessage(tabs[0].id, {
+      action: "userFailedProblem"
     })
   })
 }
@@ -302,6 +310,8 @@ const checkIfUserSolvedProblem = async (details) => {
       }
       console.log("Checking if state is success")
       if (data.status_msg !== "Accepted") {
+        await resetHyperTortureStreak()
+        sendUserFailedMessage()
         console.log(
           "It is not a success submission, user did not solve problem"
         )
@@ -356,10 +366,11 @@ export async function toggleUrlListener(toggle: boolean): Promise<void> {
         if (
           !isLeetCodeUrl(details.url) &&
           details.type === "main_frame" &&
-          details.url.includes("chrome-extension:")
+          !details.url.includes("chrome-extension:")
         ) {
           // Save the URL the user tried to open
           lastAttemptedUrl = details.url
+          console.log(lastAttemptedUrl)
         }
       },
       { urls: ["<all_urls>"] }
@@ -373,10 +384,6 @@ export async function toggleUrlListener(toggle: boolean): Promise<void> {
 chrome.runtime.onInstalled.addListener(async () => {
   await updateStorage()
   await tryResetStreak()
-})
-
-// Initialize on browser startup
-chrome.runtime.onStartup.addListener(async () => {
   await toggleUrlListener(await getHyperTortureMode())
 })
 

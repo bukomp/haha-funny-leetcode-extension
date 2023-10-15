@@ -13,6 +13,7 @@ const SettingDrawer = ({ close, setClose }) => {
     useStorage<boolean>("includePremium")
   const [hyperTortureMode, setHyperTortureMode] =
     useStorage<boolean>("hyperTortureMode")
+  const [_, setHTcurrentStreak] = useStorage<number>("HT_currentStreak")
   const settingList = [
     {
       name: "Problem Sets",
@@ -70,6 +71,7 @@ const SettingDrawer = ({ close, setClose }) => {
       checkboxProps: {
         checked: hyperTortureMode ?? false,
         handleChange: async (e) => {
+          setHTcurrentStreak(0)
           setHyperTortureMode(e.target.checked)
           await updateStorage()
           await toggleUrlListener(e.target.checked)

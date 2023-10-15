@@ -21,7 +21,7 @@ const HyperTortureModeIndex = ({ message, problemName }): React.JSX.Element => {
         <p id="leetcode-problem-name">{problemName}</p>
         <button
           id="leetcode-problem-button"
-          onClick={() => setNoEscapeMessage("There Is No Escape")}>
+          onMouseOver={() => setNoEscapeMessage("There Is No Escape")}>
           {noEscapeMessage || "Solve it"}
         </button>
       </div>
@@ -61,6 +61,8 @@ const IndexPopup = () => {
   const [hyperTortureMode] = useStorage<boolean>("hyperTortureMode")
   const [currentStreak] = useStorage<number>("currentStreak")
   const [bestStreak] = useStorage<number>("bestStreak")
+  const [HT_currentStreak] = useStorage<number>("HT_currentStreak")
+  const [HT_bestStreak] = useStorage<number>("HT_bestStreak")
   const [drawerClosed, setDrawerClosed] = useState(true)
   const [loading, setLoading] = useStorage<boolean>("loading", true)
   const [permissionsEnabled] = useStorage<boolean>("permissionsEnabled", true)
@@ -150,9 +152,13 @@ const IndexPopup = () => {
               <h2 id="solved-message">{randomSolvedMessage}</h2>
             )}
             <h2 id="current-streak-message">
-              Current Streak: {currentStreak ?? 0}
+              Current Streak:{" "}
+              {hyperTortureMode ? HT_currentStreak ?? 0 : currentStreak ?? 0}
             </h2>
-            <h2 id="best-streak-message">Best Streak: {bestStreak ?? 0}</h2>
+            <h2 id="best-streak-message">
+              Best Streak:{" "}
+              {hyperTortureMode ? HT_bestStreak ?? 0 : bestStreak ?? 0}
+            </h2>
           </>
         )
       ) : (

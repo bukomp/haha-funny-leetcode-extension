@@ -44,40 +44,43 @@ export async function getLastCompletion() {
 }
 
 export async function updateStreak() {
-  if (await storage.get("hyperTortureMode")) {
+  if (await getHyperTortureMode()) {
     // Update HT streak
-    const [bestStreak, newStreak] = await Promise.all([
-      Number(storage.get("HT_bestStreak")) ?? 0,
-      (Number(storage.get("HT_currentStreak")) ?? 0) + 1
+    const [HT_bestStreak, HT_newStreak] = await Promise.all([
+      Number(await storage.get("HT_bestStreak")) || 0,
+      (Number(await storage.get("HT_currentStreak")) || 0) + 1
     ])
 
-    await storage.set("HT_currentStreak", newStreak)
+    await storage.set("HT_currentStreak", HT_newStreak)
     // If new HT streak higher than best HT streak, update it
-    if (newStreak > bestStreak) await storage.set("HT_bestStreak", newStreak)
+    if (HT_newStreak > HT_bestStreak)
+      await storage.set("HT_bestStreak", HT_newStreak)
+  } else {
+    const [_, lastCompletion] = await Promise.all([
+      updateProblemSolvedState(true),
+      getLastCompletion()
+    ])
 
-    return
+    const now = new Date()
+    if (lastCompletion.toDateString() === new Date().toDateString()) return
+
+    const [bestStreak, newStreak] = await Promise.all([
+      Number(storage.get("bestStreak")) ?? 0,
+      (Number(storage.get("currentStreak")) ?? 0) + 1
+    ])
+
+    await storage.set("currentStreak", newStreak)
+    await storage.set("lastCompleted", now.toDateString())
+    if (newStreak > bestStreak) await storage.set("bestStreak", newStreak)
   }
-
-  const [_, lastCompletion] = await Promise.all([
-    updateProblemSolvedState(true),
-    getLastCompletion()
-  ])
-
-  const now = new Date()
-  if (lastCompletion.toDateString() === new Date().toDateString()) return
-
-  const [bestStreak, newStreak] = await Promise.all([
-    Number(storage.get("bestStreak")) ?? 0,
-    (Number(storage.get("currentStreak")) ?? 0) + 1
-  ])
-
-  await storage.set("currentStreak", newStreak)
-  await storage.set("lastCompleted", now.toDateString())
-  if (newStreak > bestStreak) await storage.set("bestStreak", newStreak)
 }
 
 export async function resetStreak() {
   await storage.set("currentStreak", 0)
+}
+
+export async function resetHyperTortureStreak() {
+  await storage.set("HT_currentStreak", 0)
 }
 
 export * as storage from "storage"
